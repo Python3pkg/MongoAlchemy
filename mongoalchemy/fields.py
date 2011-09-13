@@ -132,14 +132,14 @@ class Field(object):
 
     valid_modifiers = SCALAR_MODIFIERS
 
-    def __init__(self, required=True, default=UNSET, db_field=None, allow_none=False, on_update='$set',
+    def __init__(self, required=True, default=UNSET, db_field=None, allow_none=True, on_update='$set',
             validator=None, unwrap_validator=None, wrap_validator=None):
         '''
             :param required: The field must be passed when constructing a document (optional. default: ``True``)
             :param default:  Default value to use if one is not given (optional.)
             :param db_field: name to use when saving or loading this field from the database \
                 (optional.  default is the name the field is assigned to on a documet)
-            :param allow_none: allow ``None`` as a value (optional. default: False)
+            :param allow_none: allow ``None`` as a value (optional. default: True)
             :param validator: a callable which will be called on objects when wrapping/unwrapping
             :param unwrap_validator: a callable which will be called on objects when unwrapping
             :param wrap_validator: a callable which will be called on objects when wrapping
@@ -178,6 +178,8 @@ class Field(object):
             return self.default
         if instance.partial and self.db_field not in instance.retrieved_fields:
             raise FieldNotRetrieved(self._name)
+        if self._allow_none:
+            return None
 
         raise AttributeError(self._name)
 
