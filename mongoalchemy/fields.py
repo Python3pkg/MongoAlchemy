@@ -133,7 +133,7 @@ class Field(object):
     valid_modifiers = SCALAR_MODIFIERS
 
     def __init__(self, required=True, default=UNSET, db_field=None, allow_none=True, on_update='$set',
-            validator=None, unwrap_validator=None, wrap_validator=None):
+            validator=None, unwrap_validator=None, wrap_validator=None, eager_validation=True):
         '''
             :param required: The field must be passed when constructing a document (optional. default: ``True``)
             :param default:  Default value to use if one is not given (optional.)
@@ -143,6 +143,8 @@ class Field(object):
             :param validator: a callable which will be called on objects when wrapping/unwrapping
             :param unwrap_validator: a callable which will be called on objects when unwrapping
             :param wrap_validator: a callable which will be called on objects when wrapping
+            :param eager_validation: validate at assignment time rather than \
+                save time (optional. default: True)
 
             The general validator is called after the field's validator, but before
             either of the wrap/unwrap versions.  The validator should raise a BadValueException
@@ -158,6 +160,7 @@ class Field(object):
         self.unwrap_validator = unwrap_validator
         self.wrap_validator = wrap_validator
 
+        self._eager = eager_validation
         self._allow_none = allow_none
         self._owner = None
 
@@ -183,8 +186,9 @@ class Field(object):
 
         raise AttributeError(self._name)
 
-
     def __set__(self, instance, value):
+        if self._eager:
+            self.validate_wrap(value)
         self.set_value(instance, value)
 
     def __delete__(self, instance):
