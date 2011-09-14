@@ -341,7 +341,7 @@ class Field(object):
     def _fail_validation_type(self, value, *type):
         types = '\n'.join([str(t) for t in type])
         got = value.__class__.__name__
-        raise BadValueException(self._name, value, 'Value is not an instance of %s (got: %s)' % (types, got))
+        raise BadValueException(self._name, value, 'Value is not an instance of %s (got: %s (%s))' % (types, got, value.__repr__()))
 
     def is_valid_wrap(self, value):
         ''' Returns whether ``value`` is a valid value to wrap.
