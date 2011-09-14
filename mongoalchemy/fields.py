@@ -110,6 +110,14 @@ class FieldMeta(type):
                 # Handle None
                 if self._allow_none and value == None:
                     return
+
+                # Trivial type coercion
+                if not self._strict:
+                    try:
+                        value = self.coerce_value(value)
+                    except:
+                        pass
+
                 # Standard Field validation
                 fun(self, value, *args, **kwds)
 
@@ -218,8 +226,6 @@ class Field(object):
         raise AttributeError(self._name)
 
     def __set__(self, instance, value):
-        if not self._strict:
-            value = self.coerce_value(value)
         if self._eager:
             self.validate_wrap(value)
         self.set_value(instance, value)
@@ -289,9 +295,6 @@ class Field(object):
     def coerce_value(self, value):
         ''' Attempts to coerce_value value into the correct type for the Field.
             It should be override by Fields which allow type coercion.
-
-            Overriding functions should not raise exception - if the value
-            cannot be coerced it should return the origina value.
 
             :param value: The value to coerce_value.
         '''
@@ -378,6 +381,8 @@ class PrimitiveField(Field):
         self.constructor = constructor
 
     def wrap(self, value):
+        if not self._strict:
+            value = self.coerce_value(value)
         self.validate_wrap(value)
         return self.constructor(value)
     def unwrap(self, value):
@@ -398,11 +403,7 @@ class StringField(PrimitiveField):
 
     def coerce_value(self, value):
         ''' Attempts to convert ``value`` to a string. '''
-        try:
-            value = unicode(value)
-        except UnicodeDecodeError:
-            pass
-        return value
+        return unicode(value)
 
     def validate_wrap(self, value):
         ''' Validates the type and length of ``value`` '''
@@ -451,11 +452,7 @@ class NumberField(PrimitiveField):
 
     def coerce_value(self, value):
         ''' Coerces value to the ``self.constructor`` type. '''
-        try:
-            value = self.constructor(value)
-        except ValueError:
-            pass
-        return value
+        return self.constructor(value)
 
     def validate_wrap(self, value, type):
         ''' Validates the type and value of ``value`` '''
