@@ -79,12 +79,16 @@ def config_property(name):
     attr_name = '__' + name
 
     def get(self):
+        """ Returns the value set on the property itself if it is set,
+            otherwise returns the value set on self.parent, if set, and if
+            neither of those, returns UNSET. """
         val = getattr(self, attr_name)
         if val == UNSET:
             return getattr(self.parent, cls_name, UNSET)
         return val
 
     def set(self, val):
+        """ Sets the attribute on self. """
         setattr(self, attr_name, val)
 
     return property(get, set)
@@ -214,6 +218,8 @@ class Field(object):
         raise AttributeError(self._name)
 
     def __set__(self, instance, value):
+        if not self._strict:
+            value = self.coerce_value(value)
         if self._eager:
             self.validate_wrap(value)
         self.set_value(instance, value)
@@ -279,6 +285,17 @@ class Field(object):
             (such as SequenceField and DictField).
         '''
         pass
+
+    def coerce_value(self, value):
+        ''' Attempts to coerce_value value into the correct type for the Field.
+            It should be override by Fields which allow type coercion.
+
+            Overriding functions should not raise exception - if the value
+            cannot be coerced it should return the origina value.
+
+            :param value: The value to coerce_value.
+        '''
+        return value
 
     def wrap(self, value):
         ''' Returns an object suitable for setting as a value on a MongoDB object.
@@ -379,6 +396,14 @@ class StringField(PrimitiveField):
         self.min = min_length
         super(StringField, self).__init__(constructor=unicode, **kwargs)
 
+    def coerce_value(self, value):
+        ''' Attempts to convert ``value`` to a string. '''
+        try:
+            value = unicode(value)
+        except UnicodeDecodeError:
+            pass
+        return value
+
     def validate_wrap(self, value):
         ''' Validates the type and length of ``value`` '''
         if not isinstance(value, basestring):
@@ -400,6 +425,12 @@ class BoolField(PrimitiveField):
     ''' ``True`` or ``False``.'''
     def __init__(self, **kwargs):
         super(BoolField, self).__init__(constructor=bool, **kwargs)
+
+    def coerce_value(self,value):
+        if isinstance(value, (int, long)) and value in (0, 1):
+            value = bool(value)
+        return value
+
     def validate_wrap(self, value):
         if not isinstance(value, bool):
             self._fail_validation_type(value, bool)
@@ -418,6 +449,14 @@ class NumberField(PrimitiveField):
         self.min = min_value
         self.max = max_value
 
+    def coerce_value(self, value):
+        ''' Coerces value to the ``self.constructor`` type. '''
+        try:
+            value = self.constructor(value)
+        except ValueError:
+            pass
+        return value
+
     def validate_wrap(self, value, type):
         ''' Validates the type and value of ``value`` '''
         if not isinstance(value, type):
@@ -435,9 +474,10 @@ class IntField(NumberField):
             :param kwargs: arguments for :class:`Field`
         '''
         super(IntField, self).__init__(constructor=int, **kwargs)
+
     def validate_wrap(self, value):
         ''' Validates the type and value of ``value`` '''
-        NumberField.validate_wrap(self, value, int)
+        NumberField.validate_wrap(self, value, (int, long))
 
 class FloatField(NumberField):
     ''' Subclass of :class:`~NumberField` for ``float`` '''
