@@ -66,10 +66,29 @@ from mongoalchemy.util import UNSET
 from mongoalchemy.query_expression import QueryField
 from mongoalchemy.exceptions import BadValueException, FieldNotRetrieved, InvalidConfigException, BadFieldSpecification, MissingValueException
 
+
 SCALAR_MODIFIERS = set(['$set', '$unset'])
 NUMBER_MODIFIERS = SCALAR_MODIFIERS | set(['$inc'])
 LIST_MODIFIERS = SCALAR_MODIFIERS | set(['$push', '$addToSet', '$pull', '$pushAll', '$pullAll', '$pop'])
 ANY_MODIFIER = LIST_MODIFIERS | NUMBER_MODIFIERS
+
+
+def config_property(name):
+    """ Helper to create fail-through config properties. """
+    cls_name = 'config_' + name
+    attr_name = '__' + name
+
+    def get(self):
+        val = getattr(self, attr_name)
+        if val == UNSET:
+            return getattr(self.parent, cls_name, UNSET)
+        return val
+
+    def set(self, val):
+        setattr(self, attr_name, val)
+
+    return property(get, set)
+
 
 class FieldMeta(type):
     def __new__(mcs, classname, bases, class_dict):
@@ -120,6 +139,7 @@ class FieldMeta(type):
         # Create Class
         return type.__new__(mcs, classname, bases, class_dict)
 
+
 class Field(object):
     auto = False
 
@@ -132,19 +152,25 @@ class Field(object):
 
     valid_modifiers = SCALAR_MODIFIERS
 
-    def __init__(self, required=True, default=UNSET, db_field=None, allow_none=True, on_update='$set',
-            validator=None, unwrap_validator=None, wrap_validator=None, eager_validation=True):
+    _eager = config_property('eager_validation')
+    _strict = config_property('strict')
+    _allow_none = config_property('allow_none')
+
+    def __init__(self, required=True, default=UNSET, db_field=None, allow_none=UNSET, on_update='$set',
+            validator=None, unwrap_validator=None, wrap_validator=None, strict=UNSET, eager_validation=UNSET):
         '''
             :param required: The field must be passed when constructing a document (optional. default: ``True``)
             :param default:  Default value to use if one is not given (optional.)
             :param db_field: name to use when saving or loading this field from the database \
                 (optional.  default is the name the field is assigned to on a documet)
-            :param allow_none: allow ``None`` as a value (optional. default: True)
+            :param allow_none: allow ``None`` as a value (optional.)
             :param validator: a callable which will be called on objects when wrapping/unwrapping
             :param unwrap_validator: a callable which will be called on objects when unwrapping
             :param wrap_validator: a callable which will be called on objects when wrapping
+            :param strict: whether the field will attempt trivial coercion or \
+                    BadValueException for any incorrect types (optional.)
             :param eager_validation: validate at assignment time rather than \
-                save time (optional. default: True)
+                save time (optional.)
 
             The general validator is called after the field's validator, but before
             either of the wrap/unwrap versions.  The validator should raise a BadValueException
@@ -161,6 +187,7 @@ class Field(object):
         self.wrap_validator = wrap_validator
 
         self._eager = eager_validation
+        self._strict = strict
         self._allow_none = allow_none
         self._owner = None
 

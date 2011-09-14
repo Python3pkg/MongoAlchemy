@@ -116,6 +116,18 @@ class Document(object):
         fields which couldn't be mapped can be retrieved (and edited) using
         :func:`~Document.get_extra_fields` '''
 
+    config_eager_validation = True
+    ''' Controls whether or not this document is validated at assignment time
+        or at save time. The default value is True. '''
+
+    config_strict = False
+    ''' Controls whether or not this document attempts trivial type coercion
+        before doing field validation. The default value is False. '''
+
+    config_allow_none = True
+    ''' Controls whether or not this document allows None as a value. The
+        default value is True. '''
+
     def __init__(self, retrieved_fields=None, loading_from_db=False, **kwargs):
         ''' :param retrieved_fields: The names of the fields returned when loading \
                 a partial object.  This argument should not be explicitly set \
