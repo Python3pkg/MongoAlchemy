@@ -64,6 +64,10 @@ class DocumentMeta(type):
             value._set_name(name)
             value._set_parent(new_class)
 
+            # Make sure we can always map to _id
+            if value.db_field == '_id':
+                new_class._id_name = name
+
         # 2. create a dict of fields to set on the object
         new_class._fields = {}
         for name in dir(new_class):
@@ -275,6 +279,9 @@ class Document(object):
                 continue
             try:
                 value = getattr(self, name)
+                # Ensure we don't insert a bunch of nulls if we have allow_none
+                if value is None and field._allow_none:
+                    continue
             except AttributeError:
                 if field.required:
                     raise MissingValueException(name)
@@ -333,6 +340,27 @@ class Document(object):
 
     def __mark_clean(self):
         self._dirty.clear()
+
+    def __getattribute__(self, attr):
+        """ Ensures we can always get the :attr:`mongo_id` field so long as
+            there is another field which is mapped to _id in the database.
+
+            :param attr: name of the attribute to be retrieved
+
+        """
+        if attr != 'mongo_id':
+            return object.__getattribute__(self, attr)
+        mongo_id = None
+        try:
+            mongo_id = object.__getattribute__(self, attr)
+            if mongo_id is not None:
+                return mongo_id
+        except AttributeError:
+            pass
+        try:
+            return object.__getattribute__(self, self._id_name)
+        except AttributeError:
+            raise AttributeError('mongo_id')
 
 
 class DictDoc(object):
