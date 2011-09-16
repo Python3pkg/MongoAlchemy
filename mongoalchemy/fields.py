@@ -168,10 +168,10 @@ class Field(object):
     _strict = config_property('strict')
     _allow_none = config_property('allow_none')
 
-    def __init__(self, required=True, default=UNSET, db_field=None, allow_none=UNSET, on_update='$set',
+    def __init__(self, required=False, default=UNSET, db_field=None, allow_none=UNSET, on_update='$set',
             validator=None, unwrap_validator=None, wrap_validator=None, strict=UNSET, eager_validation=UNSET):
         '''
-            :param required: The field must be passed when constructing a document (optional. default: ``True``)
+            :param required: The field must be passed when constructing a document (optional. default: ``False``)
             :param default:  Default value to use if one is not given (optional.)
             :param db_field: name to use when saving or loading this field from the database \
                 (optional.  default is the name the field is assigned to on a documet)
@@ -244,12 +244,12 @@ class Field(object):
     def dirty_ops(self, instance):
         op = instance._dirty.get(self._name)
         if op == '$unset':
-            return { '$unset' : { self._name : True } }
+            return { '$unset' : { self.db_field : True } }
         if op == None:
             return {}
         return {
             op : {
-                self._name : self.wrap(instance._field_values[self._name])
+                self.db_field : self.wrap(instance._field_values[self._name])
             }
         }
 
@@ -258,7 +258,7 @@ class Field(object):
             return {}
         return {
             self.on_update : {
-                self._name : self.wrap(instance._field_values[self._name])
+                self.db_field : self.wrap(instance._field_values[self._name])
             }
         }
 
@@ -294,9 +294,9 @@ class Field(object):
 
     def coerce_value(self, value):
         ''' Attempts to coerce_value value into the correct type for the Field.
-            It should be override by Fields which allow type coercion.
+            It should be overridden by Fields which allow type coercion.
 
-            :param value: The value to coerce_value.
+            :param value: The value to coerce.
         '''
         return value
 
@@ -318,8 +318,9 @@ class Field(object):
         raise NotImplementedError()
 
     def validate_wrap(self, value):
-        ''' Called before wrapping.  Calls :func:`~Field.is_valid_wrap` and
+        ''' Called before wrapping.  Called by :func:`~Field.is_valid_wrap` and
             raises a :class:`BadValueException` if validation fails
+            Raises ``NotImplementedError`` in the base class.
 
             :param value: The value to validate
         '''
@@ -475,6 +476,12 @@ class IntField(NumberField):
     def validate_wrap(self, value):
         ''' Validates the type and value of ``value`` '''
         NumberField.validate_wrap(self, value, (int, long))
+
+class AutoIncrementField(IntField):
+    """ Auto-incrementing IntField. """
+    def increment_value(self):
+        """ Returns the next incremental value for the field. """
+        return 1
 
 class FloatField(NumberField):
     ''' Subclass of :class:`~NumberField` for ``float`` '''
