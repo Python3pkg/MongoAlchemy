@@ -73,8 +73,13 @@ LIST_MODIFIERS = SCALAR_MODIFIERS | set(['$push', '$addToSet', '$pull', '$pushAl
 ANY_MODIFIER = LIST_MODIFIERS | NUMBER_MODIFIERS
 
 
-def config_property(name):
-    """ Helper to create fail-through config properties. """
+def config_property(name, default=UNSET):
+    """ Helper to create fail-through config properties.
+
+        :param name: name of the config_* property
+        :param default: default value of the property should the parent not \
+                exist, or if it's not set on the parent :class:`Document`
+    """
     cls_name = 'config_' + name
     attr_name = '__' + name
 
@@ -84,7 +89,11 @@ def config_property(name):
             neither of those, returns UNSET. """
         val = getattr(self, attr_name)
         if val == UNSET:
-            return getattr(self.parent, cls_name, UNSET)
+            parent = getattr(self, 'parent', None)
+            if parent:
+                return getattr(parent, cls_name, default)
+            else:
+                return default
         return val
 
     def set(self, val):
@@ -101,6 +110,14 @@ class FieldMeta(type):
             def wrapped(self, value, *args, **kwds):
                 if self._allow_none and value == None:
                     return None
+
+                # Trivial type coercion
+                if not self._strict:
+                    try:
+                        value = self.coerce_value(value)
+                    except:
+                        pass
+
                 return fun(self, value, *args, **kwds)
             functools.update_wrapper(wrapped, fun, ('__name__', '__doc__'))
             return wrapped
@@ -164,11 +181,12 @@ class Field(object):
 
     valid_modifiers = SCALAR_MODIFIERS
 
-    _eager = config_property('eager_validation')
-    _strict = config_property('strict')
-    _allow_none = config_property('allow_none')
+    _eager = config_property('eager_validation', False)
+    _strict = config_property('strict', True)
+    _allow_none = config_property('allow_none', False)
+    required = config_property('required', True)
 
-    def __init__(self, required=False, default=UNSET, db_field=None, allow_none=UNSET, on_update='$set',
+    def __init__(self, required=UNSET, default=UNSET, db_field=None, allow_none=UNSET, on_update='$set',
             validator=None, unwrap_validator=None, wrap_validator=None, strict=UNSET, eager_validation=UNSET):
         '''
             :param required: The field must be passed when constructing a document (optional. default: ``False``)
@@ -382,8 +400,6 @@ class PrimitiveField(Field):
         self.constructor = constructor
 
     def wrap(self, value):
-        if not self._strict:
-            value = self.coerce_value(value)
         self.validate_wrap(value)
         return self.constructor(value)
     def unwrap(self, value):
