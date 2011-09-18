@@ -40,9 +40,9 @@ programmatically.  A document can have multiple indexes by adding extra
 '''
 import pymongo
 from collections import defaultdict
-from mongoalchemy.util import classproperty
+from mongoalchemy.util import classproperty, UNSET
 from mongoalchemy.query_expression import QueryField
-from mongoalchemy.fields import ObjectIdField, Field, BadValueException, SCALAR_MODIFIERS
+from mongoalchemy.fields import AnythingField, ObjectIdField, Field, BadValueException, SCALAR_MODIFIERS
 from mongoalchemy.exceptions import DocumentException, MissingValueException, ExtraValueException, FieldNotRetrieved, BadFieldSpecification
 
 document_type_registry = defaultdict(dict)
@@ -57,6 +57,8 @@ class DocumentMeta(type):
         if new_class.config_extra_fields not in ['error', 'ignore']:
             raise DocumentException("config_extra_fields must be one of: 'error', 'ignore'")
 
+        new_class._id_name = UNSET
+
         # 1. Set up links between fields and the document class
         for name, value in class_dict.iteritems():
             if not isinstance(value, Field):
@@ -66,7 +68,23 @@ class DocumentMeta(type):
 
             # Make sure we can always map to _id
             if value.db_field == '_id':
+                if new_class._id_name:
+                    raise TypeError("Multiple fields mapped to db_field='_id'")
                 new_class._id_name = name
+
+        # 1.5 Create the appropriate mongo_id field
+        if not new_class._id_name:
+            # No other _id field, let's make one
+            new_class.mongo_id = ObjectIdField(required=False, db_field='_id',
+                    on_update='ignore')
+            new_class.mongo_id._set_name('mongo_id')
+            new_class.mongo_id._set_parent(new_class)
+        else:
+            # The _id field is elsewhere, let's create a property
+            new_class.mongo_id = property(
+                    lambda self: getattr(self, self._id_name),
+                    lambda self, value: setattr(self, self._id_name, value)
+                    )
 
         # 2. create a dict of fields to set on the object
         new_class._fields = {}
@@ -85,10 +103,11 @@ class DocumentMeta(type):
 
         return new_class
 
+
 class Document(object):
     __metaclass__ = DocumentMeta
 
-    mongo_id = ObjectIdField(required=False, db_field='_id', on_update='ignore')
+    mongo_id = UNSET
     ''' Default field for the mongo object ID (``_id`` in the database). This field
         is automatically set on objects when they are saved into the database.
         This field can be overridden in subclasses if the default ID is not
@@ -120,15 +139,15 @@ class Document(object):
         fields which couldn't be mapped can be retrieved (and edited) using
         :func:`~Document.get_extra_fields` '''
 
-    config_eager_validation = True
+    config_eager_validation = False
     ''' Controls whether or not this document is validated at assignment time
         or at save time. The default value is True. '''
 
-    config_strict = False
+    config_strict = True
     ''' Controls whether or not this document attempts trivial type coercion
         before doing field validation. The default value is False. '''
 
-    config_allow_none = True
+    config_allow_none = False
     ''' Controls whether or not this document allows None as a value. The
         default value is True. '''
 
@@ -340,27 +359,6 @@ class Document(object):
 
     def __mark_clean(self):
         self._dirty.clear()
-
-    def __getattribute__(self, attr):
-        """ Ensures we can always get the :attr:`mongo_id` field so long as
-            there is another field which is mapped to _id in the database.
-
-            :param attr: name of the attribute to be retrieved
-
-        """
-        if attr != 'mongo_id':
-            return object.__getattribute__(self, attr)
-        mongo_id = None
-        try:
-            mongo_id = object.__getattribute__(self, attr)
-            if mongo_id is not None:
-                return mongo_id
-        except AttributeError:
-            pass
-        try:
-            return object.__getattribute__(self, self._id_name)
-        except AttributeError:
-            raise AttributeError('mongo_id')
 
 
 class DictDoc(object):
