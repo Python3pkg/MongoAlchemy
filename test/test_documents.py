@@ -55,7 +55,7 @@ def test_basic2():
     class Doc(Document):
         config_collection_name = 'DocCol'
         count = IntField()
-    
+
     assert Doc.class_name() == 'Doc', Doc.class_name()
     assert Doc.get_collection_name() == 'DocCol'
 
@@ -65,7 +65,7 @@ def test_update_ops():
     assert doca.get_dirty_ops() == {
         '$set' : { 'test_doc.int1' : 1 }
     }, doca.get_dirty_ops()
-    
+
     class DocB(Document):
         a = DocumentField(DocA)
         b = IntField()
@@ -75,7 +75,7 @@ def test_delete_field():
     class Doc(Document):
         a = IntField()
         b = IntField()
-    
+
     d = Doc()
     d.a = 5
     assert d.a == 5
@@ -91,8 +91,8 @@ def test_delete_field():
         assert False, 'delete attribute b failed'
     except AttributeError:
         pass
-        
-    
+
+
 
 @raises(DocumentException)
 def bad_extra_fields_param_test():
@@ -103,10 +103,10 @@ def extra_fields_test():
     class BadDoc(Document):
         config_extra_fields = 'ignore'
     doc_with_extra = {'foo' : [1]}
-    
+
     unwrapped = BadDoc.unwrap(doc_with_extra)
     assert unwrapped.get_extra_fields() == doc_with_extra
-    
+
     assert BadDoc.wrap(unwrapped) == doc_with_extra
 
 
@@ -126,7 +126,7 @@ def test_non_existant_field():
     class Doc(Document):
         i = IntField(required=False)
     Doc().j = 5
-    
+
 
 def test_default_value():
     class Doc(Document):
@@ -152,34 +152,34 @@ def docfield_test():
     class SuperDoc(Document):
         int1 = IntField()
         sub = DocumentField(TestDoc)
-    
+
     s = get_session()
     s.clear_collection(TestDoc, SuperDoc)
-    
+
     doc = TestDoc(int1=3)
     sup = SuperDoc(int1=4, sub=doc)
-    
+
     s.insert(sup)
-    
+
     for sd in s.query(SuperDoc):
         break
-    
+
     assert sd.int1 == sup.int1
     assert sd.sub.int1 == doc.int1
 
 def test_non_ma_property_attribute_error():
-    ''' At the time of writing, it was possble for a normal class field to be 
-        treated as a MA one.  If the instance's field raised an attribute 
-        error we would try to access the "required" attribute of the class 
-        level field.  This attribute only exists on MA Field instances, 
+    ''' At the time of writing, it was possble for a normal class field to be
+        treated as a MA one.  If the instance's field raised an attribute
+        error we would try to access the "required" attribute of the class
+        level field.  This attribute only exists on MA Field instances,
         though '''
     class Doc(Document):
         i = IntField()
-        
+
         @property
         def foo(self):
             raise AttributeError()
-        
+
     x = Doc(i=2)
     assert Doc.unwrap(x.wrap()).i == x.i
 
@@ -194,7 +194,7 @@ def test_doc_field_with_alternate_name():
     assert d == Doc.unwrap({'ii' : 3})
 
 def test_doc_field():
-    
+
     sd = TestDoc(int1=0)
     doca = DocA(test_doc=sd)
     wrapped = doca.wrap()
@@ -220,7 +220,7 @@ def is_valid_unwrap_test_true():
 def is_valid_unwrap_test_false():
     assert DocA.test_doc2.is_valid_unwrap({ 'int1' : 1 }) == False
 
-@raises(BadValueException) 
+@raises(BadValueException)
 def wrong_unwrap_type_test():
     DocA.unwrap({ 'test_doc2' : { 'int1' : 1 } })
 
@@ -230,7 +230,7 @@ def test_upsert_with_required():
         a = IntField()
         c = IntField()
         b = IntField(required=False)
-    
+
     s = get_session()
     s.clear_collection(D)
     s.update(D(b=4, c=4), id_expression=D.b == 4, upsert=True)
@@ -240,7 +240,7 @@ def test_upsert_with_no_changes():
         a = IntField()
         c = IntField()
         b = IntField(required=False)
-    
+
     s = get_session()
     s.clear_collection(D)
     s.update(D(a=1, b=4, c=4), id_expression=D.b == 4, upsert=True)
@@ -261,7 +261,7 @@ def test_update_with_unset():
         a = IntField()
         c = IntField()
         b = IntField(required=False)
-    
+
     s = get_session()
     s.clear_collection(D)
     d = D(a=1, b=4, c=4)
@@ -324,7 +324,7 @@ def test_namespaces_disabled():
 def test_set_parent_on_subtypes():
     class D(Document):
         a = IntField()
-    
+
     class ParentDoc(Document):
         t = TupleField(DocumentField('D'))
         e = EnumField(DocumentField('D'), D(a=1))
@@ -339,7 +339,7 @@ def test_dictdoc_contains():
     assert 's' not in t
     assert 'noexist' not in t
     assert t['i'] == 1
-        
+
 def test_dictdoc_set():
     t = T(i=1, retrieved_fields=[T.i, T.j])
     assert 'i' in t
@@ -348,7 +348,7 @@ def test_dictdoc_set():
 
 def test_dictdoc_setdefault():
     t = T(i=1, retrieved_fields=[T.i, T.j])
-    
+
     assert t.setdefault('i', 4) == 1
     assert t.setdefault('j', 3) == 3
 
@@ -358,17 +358,17 @@ def test_set_dict_field():
         data = DictField(AnythingField())
     s = Session.connect('mongoalchemy-unit-testing')
     s.clear_collection(TestDict)
-    
+
     td = TestDict()
-    
+
     td.data = {"foo": "bar", "baz": "qux"}
     s.insert(td)
-    
+
     td = s.query(TestDict).one()
-    
+
     td.data = {"foo": "bar"}
     s.insert(td)
-    
+
     td = s.query(TestDict).one()
-    
+
     assert td.data == {'foo':'bar'}, td.data
