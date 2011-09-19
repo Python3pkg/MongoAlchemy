@@ -237,8 +237,11 @@ def test_upsert_with_no_changes():
         c = IntField()
         b = IntField(required=False)
 
-    s = get_session()
+        b_index = Index().ascending('b')
+
+    s = get_session(safe=True)
     s.clear_collection(D)
+    # D.b_index.ensure(s.db[D.get_collection_name()])
     s.update(D(a=1, b=4, c=4), id_expression=D.b == 4, upsert=True)
     d = s.query(D).one()
     s.update(d, upsert=True)
@@ -258,10 +261,12 @@ def test_update_with_unset():
         c = IntField()
         b = IntField(required=False)
 
-    s = get_session()
+        b_index = Index().ascending('b')
+
+    s = get_session(safe=True)
     s.clear_collection(D)
-    d = D(a=1, b=4, c=4)
-    s.update(d, id_expression=D.b == 4, upsert=True)
+    # D.b_index.ensure(s.db[D.get_collection_name()])
+    s.update(D(a=1, b=4, c=4), id_expression=D.b == 4, upsert=True)
     d = s.query(D).one()
     del d.c
     s.update(d)
