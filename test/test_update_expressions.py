@@ -48,7 +48,7 @@ def test_find_and_modify():
     value = s.query(T).filter_by(i=12341).ascending(T.i).find_and_modify().set(i=9999).execute()
     assert value.i == 12341
     assert s.query(T).one().i == 9999
-    
+
     # return new
     value = s.query(T).filter_by(i=9999).fields(T.i).find_and_modify(new=True).set(i=8888).execute()
     assert value.i == 8888, value.i
@@ -86,11 +86,11 @@ def test_update_safe():
     s.query(TUnique).filter_by(i=1).set(i=1, j=2).upsert().execute()
     # explicit safe=false
     s.query(TUnique).filter_by(i=1).set(i=1, j=2).safe().safe(safe=False).upsert().execute()
-    
+
     # safe=true, exception
     # TODO: doesn't produce a real exception.  should investigate why, but I checked
     # and I am sending safe=True
-    # 
+    #
     # try:
     #     s.query(TUnique).filter_by(i=1).set(i=1, j=2).safe().upsert().execute()
     #     assert False, 'No error raised on safe insert for second unique item'
@@ -107,31 +107,31 @@ def test_remove():
     for i in range(0, 15):
         s.insert(T(i=i))
     assert s.query(T).count() == 15
-    
+
     def getall():
         return [t.i for t in s.query(T).ascending(T.i).all()]
-    
+
     s.remove_query(T).filter(T.i > 8).execute()
     assert s.query(T).count() == 9
-    
+
     # TODO: to /really/ test this I need to cause an error.
     remove_result = s.remove_query(T).filter(T.i > 7).set_safe(True).execute()
     assert remove_result['ok'] == 1
     assert s.query(T).count() == 8
-    
+
     s.remove_query(T).or_(T.i == 7, T.i == 6).execute()
     remaining = [0, 1, 2, 3, 4, 5]
     assert remaining == getall(), getall()
-    
+
     s.remove_query(T).in_(T.i, 0, 1).execute()
     remaining.remove(1)
     remaining.remove(0)
     assert remaining == getall(), getall()
-    
+
     s.remove_query(T).nin(T.i, 2, 3, 4).execute()
     remaining.remove(5)
     assert remaining == getall(), getall()
-    
+
     s.remove_query(T).filter_by(i=2).execute()
     remaining.remove(2)
     assert remaining == getall(), getall()
@@ -156,7 +156,7 @@ def test_remove_expression():
     class Book(Document):
         isbn = StringField()
         pages = ListField(DocumentField(Page))
-    
+
     session = get_session()
     session.clear_collection(Book)
 
@@ -177,7 +177,7 @@ def test_remove_expression_error():
     class Page(Document):
         text = StringField()
         page_num = IntField()
-    
+
     class Book(Document):
         isbn = StringField()
         pages = ListField(DocumentField(Page))
@@ -201,11 +201,11 @@ def set_test_kwargs():
 
 def set_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).set(T.j, 6).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.j == 6
-    
+
     q.filter(T.i == 5).set(T.j, 7).execute()
     t = q.one()
     assert t.i == 5 and t.j == 7
@@ -213,11 +213,11 @@ def set_db_test():
 
 def set_db_test_kwargs():
     q = update_test_setup()
-    
+
     q.set(i=5, j=6).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.j == 6
-    
+
     q.filter_by(i=5).set(j=7).execute()
     t = q.one()
     assert t.i == 5 and t.j == 7
@@ -243,11 +243,11 @@ def unset_test():
 
 def unset_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).set(T.j, 6).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.j == 6
-    
+
     ue = q.filter(T.i == 5).unset(T.j).execute()
     t = q.one()
     assert t.i == 5 and not hasattr(t, 'j'), getattr(t, 'j')
@@ -278,7 +278,7 @@ def inc_invalid_test():
 
 def inc_db_test():
     q = update_test_setup()
-    
+
     q.inc(T.i, 5).inc(T.j, 6).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.j == 6
@@ -301,11 +301,11 @@ def append_invalid_test():
 
 def append_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).append(T.l, 6).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6]
-    
+
     q.append(T.l, 5).execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5]
@@ -321,11 +321,11 @@ def extend_test():
 
 def extend_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).extend(T.l, 6, 5).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5]
-    
+
     q.extend('l', 4, 3).execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3]
@@ -350,11 +350,11 @@ def remove_invalid_test():
 
 def remove_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).extend(T.l, 6, 5, 4, 3).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3]
-    
+
     q.remove(T.l, 4).execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 3]
@@ -375,11 +375,11 @@ def remove_all_invalid_test():
 
 def remove_all_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).extend(T.l, 6, 5, 4, 3).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3]
-    
+
     q.remove_all(T.l, 6, 5, 4).execute()
     t = q.one()
     assert t.i == 5 and t.l == [3]
@@ -395,11 +395,11 @@ def add_to_set_test():
 
 def add_to_set_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).extend(T.l, 6, 5, 4, 3).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3]
-    
+
     q.add_to_set(T.l, 6).add_to_set(T.l, 2).execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3, 2]
@@ -424,11 +424,11 @@ def pop_first_invalid_test():
 
 def pop_first_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).extend(T.l, 6, 5, 4, 3).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3]
-    
+
     q.pop_first(T.l).execute()
     t = q.one()
     assert t.i == 5 and t.l == [5, 4, 3]
@@ -450,11 +450,11 @@ def pop_last_invalid_test():
 
 def pop_last_db_test():
     q = update_test_setup()
-    
+
     q.set(T.i, 5).extend(T.l, 6, 5, 4, 3).upsert().execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4, 3]
-    
+
     q.pop_last(T.l).execute()
     t = q.one()
     assert t.i == 5 and t.l == [6, 5, 4]
