@@ -1,19 +1,15 @@
 from nose.tools import *
-from mongoalchemy.session import Session
 from mongoalchemy.document import Document, Index, DocumentField
 from mongoalchemy.fields import *
-from test.util import known_failure
-
-def get_session():
-    return Session.connect('unit-testing')
+from test.util import known_failure, get_session
 
 class TestDoc(Document):
-    
+
     int1 = IntField()
     str1 = StringField()
     str2 = StringField()
     str3 = StringField()
-    
+
     index_1 = Index().ascending('int1').descending('str3')
     index_2 = Index().descending('str3')
     index_3 = Index().descending('str2').unique()
@@ -24,16 +20,18 @@ def test_indexes():
     s.clear_collection(TestDoc)
     t = TestDoc(int1=1, str1='a', str2='b', str3='c')
     s.insert(t)
-    
-    try:
-        import json
-    except:
-        import simplejson as json
-    
-    desired = '''{"_id_": {"key": [["_id", 1]], "v": 0}, "int1_1_str3_-1": {"dropDups": false, "key": [["int1", 1], ["str3", -1]], "unique": false, "v": 0}, "str1_-1": {"dropDups": true, "key": [["str1", -1]], "unique": true, "v": 0}, "str2_-1": {"dropDups": false, "key": [["str2", -1]], "unique": true, "v": 0}, "str3_-1": {"dropDups": false, "key": [["str3", -1]], "unique": false, "v": 0}}'''
+    expected = (
+            ('_id_', {'key':[('_id', 1)]}),
+            ('int1_1_str3_-1', {'key':[('int1', 1), ('str3', -1)], 'dropDups':False}),
+            ('str3_-1', {'key':[('str3', -1)], 'dropDups':False}),
+            ('str2_-1', {'key':[('str2', -1)], 'unique':True, 'dropDups':False}),
+            ('str1_-1', {'key':[('str1', -1)], 'unique':True, 'dropDups':True})
+            )
     got = s.get_indexes(TestDoc)
-    got = json.dumps(got, sort_keys=True)
-    assert got == desired, '\nG: %s\nD: %s' % (got, desired)
+    for idx, d in expected:
+        assert idx in got
+        for k, v in d.iteritems():
+            assert got[idx][k] == d[k]
 
 @known_failure
 @raises(Exception)

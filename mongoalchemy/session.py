@@ -142,6 +142,11 @@ class Session(object):
         if safe is None:
             safe = self.safe
         self.flush(safe=safe)
+        print """
+        db_key: %s
+        dirty_ops: %s
+        upsert: %s
+        safe: %s """ % (db_key, dirty_ops, upsert, safe)
         self.db[item.get_collection_name()].update(db_key, dirty_ops, upsert=upsert, safe=safe)
 
 

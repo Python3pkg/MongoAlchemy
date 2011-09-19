@@ -14,3 +14,5 @@ def test_UNSET():
     r = repr(UNSET)
     assert UNSET == UNSET
     assert UNSET != None
+    assert not bool(UNSET)
+

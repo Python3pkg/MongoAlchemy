@@ -1,8 +1,7 @@
 from nose.tools import *
-from mongoalchemy.session import Session
 from mongoalchemy.document import Document, Index, DocumentField, MissingValueException, DocumentException, DictDoc, document_type_registry
 from mongoalchemy.fields import *
-from test.util import known_failure
+from test.util import known_failure, get_session
 
 # Document Types used in some tests
 class TestDoc(Document):
@@ -39,9 +38,6 @@ class DocA(Document):
 
 def test_setup():
     document_type_registry.clear()
-
-def get_session():
-    return Session.connect('unit-testing')
 
 def test_basic():
     class Doc(Document):
@@ -356,7 +352,7 @@ def test_dictdoc_setdefault():
 def test_set_dict_field():
     class TestDict(Document):
         data = DictField(AnythingField())
-    s = Session.connect('mongoalchemy-unit-testing')
+    s = get_session()
     s.clear_collection(TestDict)
 
     td = TestDict()

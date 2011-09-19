@@ -1,6 +1,20 @@
+"""
+Utilities used throughout the tests.
+
+"""
+
 from functools import wraps
+from mongoalchemy.session import Session
+
+
+DB_NAME = 'mongoalchemy-unit-test'
+
 
 def known_failure(fun):
+    """
+    Wraps a test known to fail without causing an actual test failure.
+
+    """
     @wraps(fun)
     def wrapper(*args, **kwds):
         try:
@@ -9,3 +23,12 @@ def known_failure(fun):
         except:
             pass
     return wrapper
+
+
+def get_session():
+    """
+    Returns the :class:`Session` used for testing.
+
+    """
+    return Session.connect(DB_NAME)
+

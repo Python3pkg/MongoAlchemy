@@ -1,10 +1,9 @@
 from nose.tools import *
-from mongoalchemy.session import Session
 from mongoalchemy.document import Document, Index, DocumentField, FieldNotRetrieved
 from mongoalchemy.fields import *
 from mongoalchemy.update_expression import InvalidModifierException, UpdateException
 from mongoalchemy.query import BadQueryException, Query, BadResultException, RemoveQuery
-from test.util import known_failure
+from test.util import known_failure, get_session
 from pymongo.errors import DuplicateKeyError
 
 class T(Document):
@@ -23,9 +22,6 @@ class TUnique(Document):
     j = IntField(required=False)
     main_index = Index().ascending('i').unique()
 
-
-def get_session():
-    return Session.connect('unit-testing')
 
 #
 #   Update Operation Tests

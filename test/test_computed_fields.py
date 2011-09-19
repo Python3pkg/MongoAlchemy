@@ -1,16 +1,12 @@
 from nose.tools import *
 from mongoalchemy.fields import *
-from test.util import known_failure
-from mongoalchemy.session import Session
+from test.util import known_failure, get_session
 from mongoalchemy.document import Document, Index, DocumentField
 from mongoalchemy.query import Query
 
-def get_session():
-    return Session.connect('unit-testing')
-
 # Computed Field
 def computed_field_db_test():
-    
+
     class TestDoc2(Document):
         a = IntField()
         b = IntField()
@@ -22,7 +18,7 @@ def computed_field_db_test():
     s.clear_collection(TestDoc2)
     obj = TestDoc2(a=1, b=2)
     assert obj.a_plus_b == 3, 'Got: %s' % obj.a_plus_b
-    
+
     s.insert(obj)
     for td in s.query(TestDoc2):
         break
@@ -51,7 +47,7 @@ def computed_value_update_test():
         def c(obj):
             return 3
     assert UpDoc().get_dirty_ops() == { '$set' : { 'c' : 3 } }, UpDoc().get_dirty_ops()
-    
+
     # Deps, updated
     class UpDoc2(Document):
         i = IntField(required=False)
@@ -66,8 +62,8 @@ def computed_value_update_test():
 
 @raises(BadValueException)
 def computed_field_unwrap_test():
-    
-    
+
+
     class TestDoc2(Document):
         a = IntField()
         b = IntField()
@@ -86,7 +82,7 @@ def computed_field_wrap_value_func_test():
 
 @raises(BadValueException)
 def computed_field_wrap_test():
-    
+
     class TestDoc2(Document):
         a = IntField()
         b = IntField()
@@ -98,7 +94,7 @@ def computed_field_wrap_test():
     TestDoc2.wrap(obj)
 
 def computed_field_wrap_value_test():
-    
+
     class TestDoc2(Document):
         @computed_field(IntField())
         def c(obj):
@@ -111,7 +107,7 @@ def computed_field_wrap_value_test():
 
 @raises(BadValueException)
 def computed_field_wrap_test_wrong_type():
-    
+
     class TestDoc2(Document):
         a = IntField()
         b = IntField()
@@ -130,21 +126,21 @@ def computed_field_cached_value_test():
         @computed_field(DateTimeField(), one_time=True)
         def created(obj):
             return datetime(2010, 11, 1) + timedelta(minutes=CDoc.offset)
-        
+
         @computed_field(DateTimeField())
         def modified(obj):
             return datetime(2010, 11, 1) + timedelta(minutes=CDoc.offset)
-    
+
     c = CDoc()
     created_before = c.created
     modified_before = c.modified
     CDoc.offset = 10
     created_after = c.created
     modified_after = c.modified
-    
+
     assert created_before == created_after
     assert modified_before != modified_after
-    
+
     c.modified = datetime(1970, 10, 10)
     assert c.modified == modified_after
 
@@ -154,7 +150,7 @@ def computed_field_one_time_assignment_test():
         @computed_field(IntField(), one_time=True)
         def created(obj):
             return 1
-    
+
     c = CDoc()
     assert c.created == 1
     c.created = 2
