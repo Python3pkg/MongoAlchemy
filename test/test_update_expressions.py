@@ -157,6 +157,8 @@ def test_remove_expression():
         isbn = StringField()
         pages = ListField(DocumentField(Page))
 
+        isbn_index = Index().ascending('isbn')
+
     session = get_session()
     session.clear_collection(Book)
 
