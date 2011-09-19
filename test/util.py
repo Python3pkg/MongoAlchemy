@@ -8,6 +8,7 @@ from mongoalchemy.session import Session
 
 
 DB_NAME = 'mongoalchemy-unit-test'
+""" Name of the database to use for testing. """
 
 
 def known_failure(fun):
@@ -25,10 +26,10 @@ def known_failure(fun):
     return wrapper
 
 
-def get_session():
+def get_session(*args, **kwargs):
     """
     Returns the :class:`Session` used for testing.
 
     """
-    return Session.connect(DB_NAME)
+    return Session.connect(DB_NAME, *args, **kwargs)
 
