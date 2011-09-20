@@ -88,9 +88,11 @@ class ConfigProperty(object):
 
         parent = getattr(self, 'parent', None)
         if parent:
-            return getattr(parent, cls_name, default)
-        else:
-            return CONFIG[name]
+            val = getattr(parent, cls_name, UNSET)
+            if val != UNSET:
+                return val
+
+        return CONFIG[name]
 
     def __set__(self, instance, value):
         name = self.name
