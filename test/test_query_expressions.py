@@ -4,7 +4,7 @@ from mongoalchemy.fields import *
 from mongoalchemy.query import BadQueryException, Query, BadResultException
 from mongoalchemy.query_expression import Q
 from test.util import known_failure
-import test.util.get_session
+from test import util
 
 
 # TODO: Test al operators to make sure wrap is called on their values
@@ -26,7 +26,7 @@ class NestedParent(Document):
 
 
 def get_session():
-    s = test.util.get_session()
+    s = util.get_session()
     s.clear_collection(T, T2)
     return s
 #
