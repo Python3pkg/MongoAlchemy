@@ -40,6 +40,7 @@ programmatically.  A document can have multiple indexes by adding extra
 '''
 import pymongo
 from collections import defaultdict
+from mongoalchemy.options import config_property
 from mongoalchemy.util import classproperty, UNSET
 from mongoalchemy.query_expression import QueryField
 from mongoalchemy.fields import AnythingField, ObjectIdField, Field, BadValueException, SCALAR_MODIFIERS
@@ -55,7 +56,7 @@ class DocumentMeta(type):
         new_class = type.__new__(mcs, classname, bases, class_dict)
 
         if new_class.config_extra_fields not in ['error', 'ignore']:
-            raise DocumentException("config_extra_fields must be one of: 'error', 'ignore'")
+            raise DocumentException("config_extra_fields must be one of: 'error', 'ignore'; got: %s" % new_class.config_extra_fields)
 
         new_class._id_name = UNSET
 
@@ -113,7 +114,7 @@ class Document(object):
         This field can be overridden in subclasses if the default ID is not
         acceptable '''
 
-    config_namespace = 'global'
+    config_namespace = config_property('namespace')
     ''' The namespace is used to determine how string class names should be
         looked up.  If an instance of DocumentField is created using a string,
         it will be looked up using the value of this variable and the string.
@@ -133,21 +134,21 @@ class Document(object):
         representations of the class
     '''
 
-    config_extra_fields = 'error'
+    config_extra_fields = config_property('extra_fields')
     ''' Controls the method to use when dealing with fields passed in to the
         document constructor.  Possible values are 'error' and 'ignore'. Any
         fields which couldn't be mapped can be retrieved (and edited) using
         :func:`~Document.get_extra_fields` '''
 
-    config_eager_validation = False
+    config_eager_validation = config_property('eager_validation')
     ''' Controls whether or not this document is validated at assignment time
         or at save time. The default value is True. '''
 
-    config_strict = True
+    config_strict = config_property('strict')
     ''' Controls whether or not this document attempts trivial type coercion
         before doing field validation. The default value is False. '''
 
-    config_allow_none = False
+    config_allow_none = config_property('allow_none')
     ''' Controls whether or not this document allows None as a value. The
         default value is True. '''
 

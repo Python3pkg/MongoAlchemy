@@ -63,6 +63,7 @@ import functools
 from copy import deepcopy
 
 from mongoalchemy.util import UNSET
+from mongoalchemy.options import config_property
 from mongoalchemy.query_expression import QueryField
 from mongoalchemy.exceptions import BadValueException, FieldNotRetrieved, InvalidConfigException, BadFieldSpecification, MissingValueException
 
@@ -71,36 +72,6 @@ SCALAR_MODIFIERS = set(['$set', '$unset'])
 NUMBER_MODIFIERS = SCALAR_MODIFIERS | set(['$inc'])
 LIST_MODIFIERS = SCALAR_MODIFIERS | set(['$push', '$addToSet', '$pull', '$pushAll', '$pullAll', '$pop'])
 ANY_MODIFIER = LIST_MODIFIERS | NUMBER_MODIFIERS
-
-
-def config_property(name, default=UNSET):
-    """ Helper to create fail-through config properties.
-
-        :param name: name of the config_* property
-        :param default: default value of the property should the parent not \
-                exist, or if it's not set on the parent :class:`Document`
-    """
-    cls_name = 'config_' + name
-    attr_name = '__' + name
-
-    def get(self):
-        """ Returns the value set on the property itself if it is set,
-            otherwise returns the value set on self.parent, if set, and if
-            neither of those, returns UNSET. """
-        val = getattr(self, attr_name)
-        if val == UNSET:
-            parent = getattr(self, 'parent', None)
-            if parent:
-                return getattr(parent, cls_name, default)
-            else:
-                return default
-        return val
-
-    def set(self, val):
-        """ Sets the attribute on self. """
-        setattr(self, attr_name, val)
-
-    return property(get, set)
 
 
 class FieldMeta(type):
@@ -181,10 +152,10 @@ class Field(object):
 
     valid_modifiers = SCALAR_MODIFIERS
 
-    _eager = config_property('eager_validation', False)
-    _strict = config_property('strict', True)
-    _allow_none = config_property('allow_none', False)
-    required = config_property('required', True)
+    _eager = config_property('eager_validation')
+    _strict = config_property('strict')
+    _allow_none = config_property('allow_none')
+    required = config_property('required')
 
     def __init__(self, required=UNSET, default=UNSET, db_field=None, allow_none=UNSET, on_update='$set',
             validator=None, unwrap_validator=None, wrap_validator=None, strict=UNSET, eager_validation=UNSET):
