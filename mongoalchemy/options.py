@@ -83,6 +83,7 @@ class ConfigProperty(object):
             self = instance
         else:
             self = owner
+
         if hasattr(self, '_config') and name in self._config:
             return self._config[name]
 
@@ -96,12 +97,9 @@ class ConfigProperty(object):
 
     def __set__(self, instance, value):
         name = self.name
-        if instance:
-            self = instance
-        else:
-            self = owner
+
         if value != UNSET:
-            if not hasattr(self, '_config'):
-                self._config = {}
-            self._config[name] = value
+            if not hasattr(instance, '_config'):
+                instance._config = {}
+            instance._config[name] = value
 
