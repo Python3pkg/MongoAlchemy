@@ -152,6 +152,10 @@ class Document(object):
     ''' Controls whether or not this document allows None as a value. The
         default value is True. '''
 
+    config_required = config_property('required')
+    ''' Controls whether all fields on this document are required or not. The
+        default value is True. '''
+
     def __init__(self, retrieved_fields=None, loading_from_db=False, **kwargs):
         ''' :param retrieved_fields: The names of the fields returned when loading \
                 a partial object.  This argument should not be explicitly set \
