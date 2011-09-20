@@ -1,10 +1,10 @@
 from nose.tools import *
-from mongoalchemy.session import Session
 from mongoalchemy.document import Document, Index, DocumentField, FieldNotRetrieved
 from mongoalchemy.fields import *
 from mongoalchemy.query import BadQueryException, Query, BadResultException
 from mongoalchemy.query_expression import Q
 from test.util import known_failure
+import test.util.get_session
 
 
 # TODO: Test al operators to make sure wrap is called on their values
@@ -26,7 +26,7 @@ class NestedParent(Document):
 
 
 def get_session():
-    s = Session.connect('unit-testing')
+    s = test.util.get_session()
     s.clear_collection(T, T2)
     return s
 #
