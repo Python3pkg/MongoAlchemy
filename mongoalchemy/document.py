@@ -56,7 +56,7 @@ class DocumentMeta(type):
         new_class = type.__new__(mcs, classname, bases, class_dict)
 
         if new_class.config_extra_fields not in ['error', 'ignore']:
-            raise DocumentException("config_extra_fields must be one of: 'error', 'ignore'; got: %s" % new_class.config_extra_fields)
+            raise DocumentException("config_extra_fields must be one of: 'error', 'ignore'")
 
         new_class._id_name = UNSET
 
