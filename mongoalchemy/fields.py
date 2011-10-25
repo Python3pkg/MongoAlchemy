@@ -465,10 +465,38 @@ class IntField(NumberField):
         NumberField.validate_wrap(self, value, (int, long))
 
 class AutoIncrementField(IntField):
-    """ Auto-incrementing IntField. """
-    def increment_value(self):
-        """ Returns the next incremental value for the field. """
-        return 1
+    ''' Auto-incrementing IntField. '''
+    _counter = config_property('counter_collection')
+
+    def __init__(self, constructor, step=1, counter_collection=UNSET, **kwargs):
+        if 'default' in kwargs:
+            raise TypeError("AutoIncrementFields cannot take a default.")
+        self._step = step
+        self._counter = counter_collection
+        super(AutoIncrementField, self).__init__(constructor=constructor, **kwargs)
+
+    def increment(self, collection, name):
+        ''' Returns the next incremental value for the field.
+
+            :param collection: The :class:`pymongo.collections.Collection` to \
+                    use for the counter.
+            :param name: The counter id.
+
+        '''
+        return collection.find_and_modify(
+                query={'_id':name},
+                update={'$inc':{'value':self._step}},
+                upsert=True,
+                new=True)['value']
+
+
+    def precommit(self, db, instance, value):
+        if value is None:
+            collection = db[self._counter]
+            name = "%s_%s" % (instance.get_collection_name(), self.db_field)
+            value = self.increment(collection, name)
+        self.set_value(instance, value)
+
 
 class FloatField(NumberField):
     ''' Subclass of :class:`~NumberField` for ``float`` '''

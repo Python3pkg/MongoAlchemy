@@ -17,6 +17,7 @@ CONFIG = {
     'strict':True,
     'allow_none':False,
     'required':True,
+    'counter_collection':'_counters',
     }
 
 
@@ -24,19 +25,14 @@ def configure(*args, **kwargs):
     """
     Sets all the options via a handy helper.
 
-    :param namespace: default namespace to use
-    :type namespace: str
-    :param extra_fields: how to handle extra fields passed to a \
+    :param str namespace: default namespace to use
+    :param str extra_fields: how to handle extra fields passed to a \
             :class:`~mongoalchemy.document.Document` constructor
-    :type extra_fields: str
-    :param eager_validation: whether to validate at assignment time
-    :type eager_validation: bool
-    :param strict: whether to try trivial type coercion
-    :type strict: bool
-    :param allow_none: whether to allow None as a value for fields
-    :type allow_none: bool
-    :param required: whether a fields must be present on a document
-    :type required: bool
+    :param bool eager_validation: whether to validate at assignment time
+    :param bool strict: whether to try trivial type coercion
+    :param bool allow_none: whether to allow None as a value for fields
+    :param bool required: whether a fields must be present on a document
+    :param str counter_collection: name of the counter collection to use
 
     """
     if len(args) > 1:

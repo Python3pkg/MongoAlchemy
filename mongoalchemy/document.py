@@ -87,13 +87,19 @@ class DocumentMeta(type):
                     lambda self, value: setattr(self, self._id_name, value)
                     )
 
-        # 2. create a dict of fields to set on the object
+        # 2. Create a dict of fields to set on the object.
+        # 2.5 Register precommit hooks for fields.
         new_class._fields = {}
+        new_class._precommit = {}
         for name in dir(new_class):
             field = getattr(new_class, name)
             if not isinstance(field, QueryField):
                 continue
-            new_class._fields[name] = field.get_type()
+            field_type = field.get_type()
+            new_class._fields[name] = field_type
+            precommit = getattr(field_type, 'precommit', None)
+            if precommit:
+                new_class._precommit[name] = precommit
 
         # 3. register type
         if new_class.config_namespace != None:
@@ -155,6 +161,10 @@ class Document(object):
     config_required = config_property('required')
     ''' Controls whether all fields on this document are required or not. The
         default value is True. '''
+
+    config_counter_collection = config_property('counter_collection')
+    ''' The counter collection name to use with this Document. This only
+        applies to :class:`~fields.AutoIncrement` fields. '''
 
     def __init__(self, retrieved_fields=None, loading_from_db=False, **kwargs):
         ''' :param retrieved_fields: The names of the fields returned when loading \
@@ -277,6 +287,14 @@ class Document(object):
             return False
         return True
 
+    def precommit(self, db):
+        ''' Called before actually saving. Used internally. '''
+        cls = self.__class__
+        for name in self._precommit:
+            field = getattr(cls, name)
+            value = getattr(self, name, None)
+            self._precommit[name](field, db, self, value)
+
     def commit(self, db, safe=True):
         ''' Save this object to the database and set the ``_id`` field of this
             document to the returned id.
@@ -286,6 +304,7 @@ class Document(object):
         collection = db[self.get_collection_name()]
         for index in self.get_indexes():
             index.ensure(collection)
+        self.precommit(db)
         id = collection.save(self.wrap(), safe=safe)
         self.mongo_id = id
 
