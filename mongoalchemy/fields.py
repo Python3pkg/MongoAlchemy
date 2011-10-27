@@ -468,12 +468,12 @@ class AutoIncrementField(IntField):
     ''' Auto-incrementing IntField. '''
     _counter = config_property('counter_collection')
 
-    def __init__(self, constructor, step=1, counter_collection=UNSET, **kwargs):
+    def __init__(self, step=1, counter_collection=UNSET, **kwargs):
         if 'default' in kwargs:
             raise TypeError("AutoIncrementFields cannot take a default.")
         self._step = step
         self._counter = counter_collection
-        super(AutoIncrementField, self).__init__(constructor=constructor, **kwargs)
+        super(AutoIncrementField, self).__init__(**kwargs)
 
     def increment(self, collection, name):
         ''' Returns the next incremental value for the field.

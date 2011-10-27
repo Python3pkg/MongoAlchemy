@@ -291,9 +291,9 @@ class Document(object):
         ''' Called before actually saving. Used internally. '''
         cls = self.__class__
         for name in self._precommit:
-            field = getattr(cls, name)
             value = getattr(self, name, None)
-            self._precommit[name](field, db, self, value)
+            print self._precommit
+            self._precommit[name](db, self, value)
 
     def commit(self, db, safe=True):
         ''' Save this object to the database and set the ``_id`` field of this
