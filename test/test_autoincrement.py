@@ -61,3 +61,24 @@ def test_increment_induction():
 
     assert d2.a == 2
 
+    d3 = DocInc()
+    s.insert(d3)
+
+    assert d3.a == 3
+
+
+def test_multi_field():
+    class DocMulti(Document):
+        a = AutoIncrementField()
+        b = AutoIncrementField()
+
+    d = DocMulti()
+    s = get_session()
+    s.insert(d)
+    assert d.a == 1 and d.b == 1
+
+    d = DocMulti()
+    s.insert(d)
+    assert d.a == 2 and d.b == 2
+
+
