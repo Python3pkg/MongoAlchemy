@@ -206,6 +206,8 @@ class Field(object):
         if self._name in instance._field_values:
             return instance._field_values[self._name]
         if self.default != UNSET:
+            if callable(self.default):
+                return self.default()
             return self.default
         if instance.partial and self.db_field not in instance.retrieved_fields:
             raise FieldNotRetrieved(self._name)
