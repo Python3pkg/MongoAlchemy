@@ -82,3 +82,23 @@ def test_multi_field():
     assert d.a == 2 and d.b == 2
 
 
+def test_with_db_field_any():
+    class DocDBFieldAny(Document):
+        a = AutoIncrementField(db_field='any')
+
+    d = DocDBFieldAny()
+    s = get_session()
+    s.insert(d)
+    assert d.a == 1
+
+
+def test_with_db_field_id():
+    class DocDBFieldId(Document):
+        a = AutoIncrementField(db_field='_id')
+
+    d = DocDBFieldId()
+    s = get_session()
+    s.insert(d)
+    assert d.a == 1
+    assert d.mongo_id == 1
+
