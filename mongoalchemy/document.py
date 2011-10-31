@@ -292,7 +292,6 @@ class Document(object):
         cls = self.__class__
         for name in self._precommit:
             value = getattr(self, name, None)
-            print self._precommit
             self._precommit[name](db, self, value)
 
     def commit(self, db, safe=True):
