@@ -20,12 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from mongoalchemy.exceptions import BadValueException
+from mongoalchemy.exceptions import BadValueException, BadQueryException
 
-class BadQueryException(Exception):
-    ''' Raised when a method would result in a query which is not well-formed.
-    '''
-    pass
 
 class FreeFormField(object):
     has_subfields = True

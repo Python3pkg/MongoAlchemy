@@ -24,8 +24,10 @@ from functools import wraps
 from pymongo import ASCENDING, DESCENDING
 from copy import copy, deepcopy
 
-from mongoalchemy.fields import BadValueException
-from mongoalchemy.query_expression import QueryExpression, BadQueryException, flatten
+from mongoalchemy.exceptions import BadValueException, UpdateException, \
+        InvalidModifierException, ConflictingModifierException
+from mongoalchemy.query_expression import QueryExpression, BadQueryException, \
+        flatten
 
 class UpdateExpression(object):
     def __init__(self, query):
@@ -214,16 +216,3 @@ class FindAndModifyExpression(UpdateExpression):
         return self.session.execute_find_and_modify(self)
 
 
-class UpdateException(Exception):
-    ''' Base class for exceptions related to updates '''
-    pass
-
-class InvalidModifierException(UpdateException):
-    ''' Exception raised if a modifier was used which isn't valid for a field '''
-    def __init__(self, field, op):
-        UpdateException.__init__(self, 'Invalid modifier for %s field: %s' % (field.__class__.__name__, op))
-
-class ConflictingModifierException(UpdateException):
-    ''' Exception raised if conflicting modifiers are being used in the
-        update expression '''
-    pass

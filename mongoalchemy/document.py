@@ -516,6 +516,7 @@ class DocumentField(Field):
         except BadValueException, bve:
             self._fail_validation(value, 'Bad value for DocumentField field', cause=bve)
 
+
 class Index(object):
     ''' This class is  used in the class definition of a :class:`~Document` to
         specify a single, possibly compound, index.  ``pymongo``'s ``ensure_index``

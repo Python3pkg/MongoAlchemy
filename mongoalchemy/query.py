@@ -24,13 +24,10 @@ from functools import wraps
 from pymongo import ASCENDING, DESCENDING
 from copy import copy, deepcopy
 
-from mongoalchemy.fields import BadValueException
+from mongoalchemy.exceptions import BadResultException, BadValueException
 from mongoalchemy.query_expression import QueryExpression, BadQueryException, flatten
 from mongoalchemy.update_expression import UpdateExpression, FindAndModifyExpression
 
-class BadResultException(Exception):
-    ''' Only raised right now when .one() finds more than one object '''
-    pass
 
 class Query(object):
     ''' A query object has all of the methods necessary to programmatically
