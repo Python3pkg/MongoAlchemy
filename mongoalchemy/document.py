@@ -290,7 +290,6 @@ class Document(object):
 
     def precommit(self, db):
         ''' Called before actually saving. Used internally. '''
-        cls = self.__class__
         for name in self._precommit:
             value = getattr(self, name, None)
             self._precommit[name](db, self, value)

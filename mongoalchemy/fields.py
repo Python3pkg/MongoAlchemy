@@ -417,7 +417,7 @@ class BoolField(PrimitiveField):
     def __init__(self, **kwargs):
         super(BoolField, self).__init__(constructor=bool, **kwargs)
 
-    def coerce_value(self,value):
+    def coerce_value(self, value):
         if isinstance(value, (int, long)) and value in (0, 1):
             value = bool(value)
         return value
