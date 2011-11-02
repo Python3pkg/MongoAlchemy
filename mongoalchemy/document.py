@@ -58,7 +58,8 @@ class DocumentMeta(type):
         if new_class.config_extra_fields not in ['error', 'ignore']:
             raise DocumentException("config_extra_fields must be one of: 'error', 'ignore'")
 
-        new_class._id_name = UNSET
+        if getattr(new_class, '_id_name', UNSET) == UNSET:
+            new_class._id_name = UNSET
 
         # 1. Set up links between fields and the document class
         for name, value in class_dict.iteritems():
@@ -534,14 +535,31 @@ class Index(object):
             ...
             ...     i_name = Index().ascending('name')
             ...     type_age = Index().ascending('blood_type').descending('age')
+
+        *New in 0.10*: Index options can be specified to the constructor
+        instead of using the chain syntax::
+
+            >>> i_name = Index(unique=True, sparse=True, drop_dups=False)
+
     '''
     ASCENDING = pymongo.ASCENDING
     DESCENDING = pymongo.DESCENDING
 
-    def __init__(self):
+    def __init__(self, unique=False, drop_dups=False, sparse=False):
+        '''
+        :param bool unique: Uniqueness of the index (default: False).
+        :param bool drop_dups: Whether to remove duplicates when creating a \
+                new unique index. Only applies if ``unique=True`` (default: \
+                False).
+        :param bool sparse: Whether to create a sparse index. Combined with \
+                ``unique=True`` this can create an index which ensures
+                uniqueness while ignoring documents with missing fields.
+
+        '''
         self.components = []
-        self.__unique = False
-        self.__drop_dups = False
+        self.__unique = unique
+        self.__drop_dups = unique and drop_dups
+        self.__sparse = sparse
 
     def ascending(self, name):
         ''' Add a descending index for ``name`` to this index.
@@ -558,6 +576,10 @@ class Index(object):
         '''
         self.components.append((name, Index.DESCENDING))
         return self
+
+    def sparse(self):
+        ''' Make this index sparse. '''
+        self.__sparse = True
 
     def unique(self, drop_dups=False):
         ''' Make this index unique, optionally dropping duplicate entries.
@@ -576,6 +598,6 @@ class Index(object):
                     is on
         '''
         collection.ensure_index(self.components, unique=self.__unique,
-            drop_dups=self.__drop_dups)
+            drop_dups=self.__drop_dups, sparse=self.__sparse)
         return self
 
