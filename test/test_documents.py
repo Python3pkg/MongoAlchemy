@@ -373,3 +373,12 @@ def test_set_dict_field():
     td = s.query(TestDict).one()
 
     assert td.data == {'foo':'bar'}, td.data
+
+
+@raises(TypeError)
+def test_multiple_id_fields():
+    class TestMultipleId(Document):
+        a = IntField(db_field='_id')
+        b = IntField(db_field='_id')
+
+
