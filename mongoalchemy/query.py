@@ -24,9 +24,10 @@ from functools import wraps
 from pymongo import ASCENDING, DESCENDING
 from copy import copy, deepcopy
 
-from mongoalchemy.exceptions import BadResultException, BadValueException
 from mongoalchemy.query_expression import QueryExpression, BadQueryException, flatten
 from mongoalchemy.update_expression import UpdateExpression, FindAndModifyExpression
+from mongoalchemy.exceptions import NoResultFound, MultipleResultsFound, \
+        BadValueException
 
 
 class Query(object):
@@ -115,14 +116,15 @@ class Query(object):
 
     def one(self):
         ''' Execute the query and return one result.  If more than one result
-            is returned, raises a ``BadResultException``
+            is returned, raises either ``MultipleResultsFound`` or
+            ``NoResultFound`` as appropriate.
         '''
         count = -1
         for count, result in enumerate(self):
             if count > 0:
-                raise BadResultException('Too many results for .one()')
+                raise MultipleResultsFound('Too many results for .one()')
         if count == -1:
-            raise BadResultException('Too few results for .one()')
+            raise NoResultFound('Too few results for .one()')
         return result
 
     def first(self):
