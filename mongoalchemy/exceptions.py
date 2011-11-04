@@ -1,3 +1,9 @@
+"""
+Exceptions.
+
+This module contains all of MongoAlchemy's raised exceptions.
+
+"""
 
 class MongoAlchemyException(Exception):
     ''' Base class for all mongo alchemy related exceptions. '''
@@ -11,10 +17,11 @@ class BadValueException(MongoAlchemyException):
         self.name = name
         self.value = value
         self.cause = cause
-        message = 'Bad value for field of type "%s".  Reason: "%s".' % (name, reason)
+        message = 'Bad value for field of type "%s".  Reason: "%s".' % \
+                (name, reason)
         if cause != None:
             message = '%s Cause: %s' % (message, cause)
-        Exception.__init__(self, message)
+        super(BadValueException, self).__init__(message)
 
 
 class InvalidConfigException(MongoAlchemyException):
@@ -55,6 +62,16 @@ class BadResultException(MongoAlchemyException):
     pass
 
 
+class NoResultFound(BadResultException):
+    ''' Raised when .one() has no results. '''
+    pass
+
+
+class MultipleResultsFound(BadResultException):
+    ''' Raised when .one() finds too many results. '''
+    pass
+
+
 class BadQueryException(MongoAlchemyException):
     ''' Raised when a method would result in a query which is not well-formed.
     '''
@@ -69,9 +86,11 @@ class UpdateException(MongoAlchemyException):
 class InvalidModifierException(UpdateException):
     ''' Exception raised if a modifier was used which isn't valid for a 
         field '''
-    def __init__(self, field, op):
-        UpdateException.__init__(self, 'Invalid modifier for %s field: %s' % \
-                (field.__class__.__name__, op))
+    def __init__(self, field, oper):
+        super(InvalidModifierException, self).__init__(
+                'Invalid modifier for %s field: %s' % \
+                (field.__class__.__name__, oper)
+                )
 
 
 class ConflictingModifierException(UpdateException):
