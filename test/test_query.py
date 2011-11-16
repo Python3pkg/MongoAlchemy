@@ -14,6 +14,29 @@ class T(Document):
 class T2(Document):
     t = DocumentField(T)
 
+class V(Document):
+    i = IntField()
+    s = StringField()
+
+# TODO: Test DocumentField retrieval, etc.
+# TODO: Test chaining, cloning
+def test_values_only():
+    s = get_session()
+    s.clear_collection(V)
+
+    for n in xrange(5):
+        obj = V(i=n, s=chr(65+n))
+        s.insert(obj)
+
+    i = 0
+    for t in s.query(V).fields(V.i, values_only=True).all():
+        assert t[0] == i
+        i += 1
+    i = 0
+    for t in s.query(V).fields(V.s, values_only=True).all():
+        assert t[0] == chr(65+i)
+        i += 1
+
 def test_update():
     s = get_session()
     s.clear_collection(T)

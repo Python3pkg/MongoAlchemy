@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 
 from functools import wraps
+from collections import namedtuple
 from pymongo import ASCENDING, DESCENDING
 from copy import copy, deepcopy
 
@@ -47,6 +48,8 @@ class Query(object):
         self.__query = {}
         self.sort = []
         self._fields = None
+        self._field_order = []
+        self._values_only = None
         self.hints = []
         self._limit = None
         self._skip = None
@@ -108,6 +111,8 @@ class Query(object):
         qclone.__query = deepcopy(self.__query)
         qclone.sort = deepcopy(self.sort)
         qclone._fields = deepcopy(self._fields)
+        qclone._field_order = deepcopy(self._field_order)
+        qclone._values_only = deepcopy(self._values_only)
         qclone._hints = deepcopy(self.hints)
         qclone._limit = deepcopy(self._limit)
         qclone._skip = deepcopy(self._skip)
@@ -212,21 +217,34 @@ class Query(object):
         '''
         return self.__get_query_result().cursor.count(with_limit_and_skip=with_limit_and_skip)
 
-    def fields(self, *fields):
+    def fields(self, *fields, **kwargs):
         ''' Only return the specified fields from the object.  Accessing a \
             field that was not specified in ``fields`` will result in a \
             :class:``mongoalchemy.document.FieldNotRetrieved`` exception being \
-            raised
+            raised.
+
+            If ``values_only`` is ``True`` then instead of the query returning
+            partial Documents, it will return named tuples containing the
+            values of the fields in the order specified.
 
             :param fields: Instances of :class:``mongoalchemy.query.QueryField`` specifying \
                 which fields to return
+            :param values_only: Only return values instead of a Document \
+                    (default: False).
+
         '''
         if self._fields == None:
             self._fields = set()
+        vals = kwargs.pop('values_only', None)
+        if vals is not None:
+            self._values_only = vals
         for f in fields:
             f = self.resolve_name(f)
+            if f not in self._field_order:
+                self._field_order.append(f)
             self._fields.add(f)
-        self._fields.add(self.type.mongo_id)
+        if not vals:
+            self._fields.add(self.type.mongo_id)
         return self
 
     def _apply(self, qe):
@@ -375,22 +393,37 @@ class Query(object):
 
 
 class QueryResult(object):
-    def __init__(self, cursor, type, raw_output=False, fields=None):
+    def __init__(self, cursor, type, raw_output=False, fields=None,
+            field_order=tuple(), values_only=False):
         self.cursor = cursor
         self.type = type
         self.fields = fields
+        self.field_order = field_order
         self.raw_output = raw_output
+        self.values_only = values_only
+
+    def _as_tuple(self, value):
+        return namedtuple(self.type.__name__, self.field_order) \
+                ._make(getattr(self.type, field._name) \
+                    .unwrap(value[field.db_field]) \
+                    for field in self.field_order)
 
     def next(self):
         value = self.cursor.next()
         if not self.raw_output:
-            value = self.type.unwrap(value, fields=self.fields)
+            if self.values_only:
+                value = self._as_tuple(value)
+            else:
+                value = self.type.unwrap(value, fields=self.fields)
         return value
 
     def __getitem__(self, index):
         value = self.cursor.__getitem__(index)
         if not self.raw_output:
-            value = self.type.unwrap(value)
+            if self.values_only:
+                value = self._as_tuple(value)
+            else:
+                value = self.type.unwrap(value)
         return value
 
     def rewind(self):
@@ -398,7 +431,8 @@ class QueryResult(object):
 
     def clone(self):
         return QueryResult(self.cursor.clone(), self.type,
-            raw_output=self.raw_output, fields=self.fields)
+            raw_output=self.raw_output, fields=self.fields,
+            field_order=self.field_order, values_only=self.values_only)
 
     def __iter__(self):
         return self
