@@ -27,7 +27,7 @@ from copy import copy, deepcopy
 from mongoalchemy.query_expression import QueryExpression, BadQueryException, flatten
 from mongoalchemy.update_expression import UpdateExpression, FindAndModifyExpression
 from mongoalchemy.exceptions import NoResultFound, MultipleResultsFound, \
-        BadValueException
+        BadValueException, BadResultException
 
 
 class Query(object):
