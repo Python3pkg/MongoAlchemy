@@ -37,6 +37,23 @@ def test_values_only():
         assert t[0] == chr(65+i)
         i += 1
 
+def test_values_only_clone_basic():
+    s = get_session()
+    s.clear_collection(V)
+
+    for n in xrange(5):
+        obj = V(i=n, s=chr(65+n))
+        s.insert(obj)
+
+    query = s.query(V).fields(V.i, values_only=True)
+    query = query.clone()
+
+    i = 0
+    for t in query.all():
+        assert t[0] == i
+        i += 1
+
+
 def test_update():
     s = get_session()
     s.clear_collection(T)

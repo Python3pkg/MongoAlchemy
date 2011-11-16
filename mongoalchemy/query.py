@@ -111,7 +111,7 @@ class Query(object):
         qclone.__query = deepcopy(self.__query)
         qclone.sort = deepcopy(self.sort)
         qclone._fields = deepcopy(self._fields)
-        qclone._field_order = deepcopy(self._field_order)
+        qclone._field_order = copy(self._field_order)
         qclone._values_only = deepcopy(self._values_only)
         qclone._hints = deepcopy(self.hints)
         qclone._limit = deepcopy(self._limit)
