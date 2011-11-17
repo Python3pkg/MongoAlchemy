@@ -403,7 +403,8 @@ class QueryResult(object):
         self.values_only = values_only
 
     def _as_tuple(self, value):
-        return namedtuple(self.type.__name__, self.field_order) \
+        return namedtuple(self.type.__name__, (field._name \
+                for field in self.field_order)) \
                 ._make(getattr(self.type, field._name) \
                     .unwrap(value[field.db_field]) \
                     for field in self.field_order)

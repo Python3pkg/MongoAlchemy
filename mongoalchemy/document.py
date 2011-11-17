@@ -48,6 +48,7 @@ from mongoalchemy.exceptions import DocumentException, MissingValueException, Ex
 
 document_type_registry = defaultdict(dict)
 
+
 class DocumentMeta(type):
     def __new__(mcs, classname, bases, class_dict):
         # Validate Config Options
@@ -82,11 +83,24 @@ class DocumentMeta(type):
             new_class.mongo_id._set_name('mongo_id')
             new_class.mongo_id._set_parent(new_class)
         else:
+            _map_to = new_class._id_name
+            class MongoIdProxy(object):
+                """ The property proxy for when the ``_id`` field of a Document
+                    is not the ``mongo_id`` property.
+
+                """
+                def __get__(self, instance, owner):
+                    if instance:
+                        self = instance
+                    else:
+                        self = owner
+                    return getattr(self, _map_to)
+
+                def __set__(self, instance, value):
+                    setattr(instance, _map_to, value)
+
             # The _id field is elsewhere, let's create a property
-            new_class.mongo_id = property(
-                    lambda self: getattr(self, self._id_name),
-                    lambda self, value: setattr(self, self._id_name, value)
-                    )
+            new_class.mongo_id = MongoIdProxy()
 
         # 2. Create a dict of fields to set on the object.
         # 2.5 Register precommit hooks for fields.
