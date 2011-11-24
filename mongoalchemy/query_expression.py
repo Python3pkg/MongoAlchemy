@@ -213,8 +213,8 @@ class QueryExpression(object):
     ''' A QueryExpression wraps a dictionary representing a query to perform
         on a mongo collection.  The
 
-        .. note:: There is no ``and_`` expression because multiple expressions
-            can be specified to a single call of :func:`Query.filter`
+        .. note:: Multiple expressions can be specified to a single 
+            call of :func:`Query.filter`
     '''
     def __init__(self, obj):
         self.obj = obj
@@ -253,6 +253,27 @@ class QueryExpression(object):
 
     def __invert__(self):
         return self.not_()
+
+    def __and__(self, expression):
+        return self.and_(expression)
+
+    def and_(self, expression):
+        ''' Adds the given expression to this instance's MongoDB ``$and``
+            expression, starting a new one if one does not exst
+
+            **Example**: ``(User.name == 'Jeff').and_(User.active == 1)``
+
+            .. note:: The prefered usageis via an operator: ``User.name == 'Jeff' & User.active == 1``
+
+            '''
+
+        if '$and' in self.obj:
+            self.obj['$and'].append(expression.obj)
+            return self
+        self.obj = {
+            '$and' : [self.obj, expression.obj]
+        }
+        return self
 
     def __or__(self, expression):
         return self.or_(expression)
