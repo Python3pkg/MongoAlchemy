@@ -21,7 +21,10 @@
 # THE SOFTWARE.
 
 from mongoalchemy.exceptions import BadValueException, BadQueryException
+import re
 
+# No better way to do this
+RE_TYPE = type(re.compile(''))
 
 class FreeFormField(object):
     has_subfields = True
@@ -115,6 +118,13 @@ class QueryField(object):
         return QueryExpression({
             self : { '$in' : [self.get_type().wrap_value(value) for value in values] }
         })
+
+    def like(self, value):
+        ''' Check to see that the value of ``qfield`` is LIKE ``value``
+
+            :param value: Value should be a string containing at least one '%' operator 
+        '''
+        return QueryExpression({ self : re.compile(value.replace('%', '.*') ) } )
 
     def nin(self, *values):
         ''' A query to check if this query field is not one of the values
@@ -220,7 +230,10 @@ class QueryExpression(object):
         ret_obj = {}
         for k, v in self.obj.iteritems():
             if not isinstance(v, dict):
-                ret_obj[k] = {'$ne' : v }
+                if type(v) == RE_TYPE:
+                    ret_obj[k] = {'$not' : v } # $ne
+                else:
+                    ret_obj[k] = {'$ne' : v }
                 continue
             num_ops = len([x for x in v if x[0] == '$'])
             if num_ops != len(v) and num_ops != 0:
