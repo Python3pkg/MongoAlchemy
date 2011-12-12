@@ -1,22 +1,28 @@
 #!/usr/bin/env python
-
+import os
 from distutils.core import setup
 
-VERSION = '0.10'
-DESCRIPTION = 'Document-Object Mapper/Toolkit for Mongo Databases'
+def read(fname):
+    """ Utility function for loading the long description. """
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+VERSION = '0.12'
+DESCRIPTION = 'Document-Object Mapper/Toolkit for MongoDB - Voltron Fork'
+LONG_DESCRIPTION = read('README.rst')
 
 setup(
-    name='MongoAlchemy',
+    name='MongoAlchemyVoltron',
     version=VERSION,
     description=DESCRIPTION,
-    author='Jeffrey Jenkins',
+    long_description=LONG_DESCRIPTION,
+    author='Jake Alheid',
     license='MIT',
-    author_email='jeff@qcircles.net',
-    url='http://mongoalchemy.org/',
+    author_email='jake@about.me',
+    url='https://github.com/shakefu/MongoAlchemy',
     packages=['mongoalchemy'],
     install_requires=['pymongo'],
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
