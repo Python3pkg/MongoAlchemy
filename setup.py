@@ -4,9 +4,12 @@ from distutils.core import setup
 
 def read(fname):
     """ Utility function for loading the long description. """
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    try:
+        return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    except:
+        return ''
 
-VERSION = '0.12'
+VERSION = '0.12.1'
 DESCRIPTION = 'Document-Object Mapper/Toolkit for MongoDB - Voltron Fork'
 LONG_DESCRIPTION = read('README.rst')
 
