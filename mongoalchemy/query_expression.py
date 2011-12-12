@@ -21,7 +21,10 @@
 # THE SOFTWARE.
 
 from mongoalchemy.exceptions import BadValueException, BadQueryException
+import re
 
+# No better way to do this
+RE_TYPE = type(re.compile(''))
 
 class FreeFormField(object):
     has_subfields = True
@@ -116,6 +119,13 @@ class QueryField(object):
             self : { '$in' : [self.get_type().wrap_value(value) for value in values] }
         })
 
+    def like(self, value):
+        ''' Check to see that the value of ``qfield`` is LIKE ``value``
+
+            :param value: Value should be a string containing at least one '%' operator 
+        '''
+        return QueryExpression({ self : re.compile(value.replace('%', '.*') ) } )
+
     def nin(self, *values):
         ''' A query to check if this query field is not one of the values
             in ``values``.  Produces a MongoDB ``$nin`` expression.
@@ -203,8 +213,8 @@ class QueryExpression(object):
     ''' A QueryExpression wraps a dictionary representing a query to perform
         on a mongo collection.  The
 
-        .. note:: There is no ``and_`` expression because multiple expressions
-            can be specified to a single call of :func:`Query.filter`
+        .. note:: Multiple expressions can be specified to a single 
+            call of :func:`Query.filter`
     '''
     def __init__(self, obj):
         self.obj = obj
@@ -220,7 +230,10 @@ class QueryExpression(object):
         ret_obj = {}
         for k, v in self.obj.iteritems():
             if not isinstance(v, dict):
-                ret_obj[k] = {'$ne' : v }
+                if type(v) == RE_TYPE:
+                    ret_obj[k] = {'$not' : v } # $ne
+                else:
+                    ret_obj[k] = {'$ne' : v }
                 continue
             num_ops = len([x for x in v if x[0] == '$'])
             if num_ops != len(v) and num_ops != 0:
@@ -240,6 +253,27 @@ class QueryExpression(object):
 
     def __invert__(self):
         return self.not_()
+
+    def __and__(self, expression):
+        return self.and_(expression)
+
+    def and_(self, expression):
+        ''' Adds the given expression to this instance's MongoDB ``$and``
+            expression, starting a new one if one does not exst
+
+            **Example**: ``(User.name == 'Jeff').and_(User.active == 1)``
+
+            .. note:: The prefered usageis via an operator: ``User.name == 'Jeff' & User.active == 1``
+
+            '''
+
+        if '$and' in self.obj:
+            self.obj['$and'].append(expression.obj)
+            return self
+        self.obj = {
+            '$and' : [self.obj, expression.obj]
+        }
+        return self
 
     def __or__(self, expression):
         return self.or_(expression)
