@@ -5,6 +5,8 @@ This is a fork of the awesome MongoAlchemy project, containing a number of new
 features which are very poorly, if at all documented. Hopefully that will be
 fixed in the near future.
 
+The fork is at: http://github.com/shakefu/mongoalchemy
+
 A big thanks goes out to Jeff Jenkins (jeff@qcircles.net) as the original
 creator of MongoAlchemy. The documentation linked to below is the normal
 documentation for MongoAlchemy.
