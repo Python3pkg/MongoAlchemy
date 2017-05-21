@@ -44,8 +44,8 @@ source_suffix = '.txt'
 master_doc = 'index'
 
 # General information about the project.
-project = u'MongoAlchemy'
-copyright = u'2010, Jeffrey Jenkins'
+project = 'MongoAlchemy'
+copyright = '2010, Jeffrey Jenkins'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -186,8 +186,8 @@ htmlhelp_basename = 'MongoAlchemydoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'MongoAlchemy.tex', u'MongoAlchemy Documentation',
-   u'Jeffrey Jenkins', 'manual'),
+  ('index', 'MongoAlchemy.tex', 'MongoAlchemy Documentation',
+   'Jeffrey Jenkins', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -219,6 +219,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'mongoalchemy', u'MongoAlchemy Documentation',
-     [u'Jeffrey Jenkins'], 1)
+    ('index', 'mongoalchemy', 'MongoAlchemy Documentation',
+     ['Jeffrey Jenkins'], 1)
 ]

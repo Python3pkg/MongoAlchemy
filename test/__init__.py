@@ -5,7 +5,7 @@ There's a bunch of tests here, man.
 
 """
 
-from util import get_session
+from .util import get_session
 
 
 def setup():

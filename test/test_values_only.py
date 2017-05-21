@@ -13,7 +13,7 @@ def setup():
     s = get_session()
     s.clear_collection(V)
 
-    for n in xrange(5):
+    for n in range(5):
         obj = V(i=n, s=chr(65+n))
         s.insert(obj)
 

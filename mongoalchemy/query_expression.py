@@ -228,7 +228,7 @@ class QueryExpression(object):
                 to get past precedence issues: ``~ (User.name == 'Jeff')``
             '''
         ret_obj = {}
-        for k, v in self.obj.iteritems():
+        for k, v in self.obj.items():
             if not isinstance(v, dict):
                 if type(v) == RE_TYPE:
                     ret_obj[k] = {'$not' : v } # $ne
@@ -243,7 +243,7 @@ class QueryExpression(object):
                 ret_obj[k] = {'$ne' : v }
                 continue
 
-            for op, value in v.iteritems():
+            for op, value in v.items():
                 k_dict = ret_obj.setdefault(k, {})
                 not_dict = k_dict.setdefault('$not', {})
                 not_dict[op] = value
@@ -301,8 +301,8 @@ def flatten(obj):
     if not isinstance(obj, dict):
         return obj
     ret = {}
-    for k, v in obj.iteritems():
-        if not isinstance(k, basestring):
+    for k, v in obj.items():
+        if not isinstance(k, str):
             k = str(k)
         if isinstance(v, dict):
             v = flatten(v)

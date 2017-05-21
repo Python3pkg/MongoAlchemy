@@ -31,7 +31,7 @@ class UNSET(object):
         return 'UNSET'
     def __eq__(self, other):
         return other.__class__ == self.__class__
-    def __nonzero__(self):
+    def __bool__(self):
         return False
 UNSET = UNSET()
 

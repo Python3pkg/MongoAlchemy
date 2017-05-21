@@ -130,9 +130,9 @@ class Session(object):
             db_key = {'_id' : item.mongo_id}
 
         dirty_ops = item.get_dirty_ops(with_required=upsert)
-        for key, op in chain(update_ops.items(), kwargs.items()):
+        for key, op in chain(list(update_ops.items()), list(kwargs.items())):
             key = str(key)
-            for current_op, keys in dirty_ops.items():
+            for current_op, keys in list(dirty_ops.items()):
                 if key not in keys:
                     continue
                 dirty_ops.setdefault(op,{})[key] = keys[key]
@@ -155,7 +155,7 @@ class Session(object):
         # This really should be adding a query operation to the
         # queue which is then forced to execute when the results are being
         # read
-        if isinstance(type, basestring):
+        if isinstance(type, str):
             type = FreeFormDoc(type)
         return Query(type, self)
 
@@ -238,7 +238,7 @@ class Session(object):
             multi=update.get_multi(),
             safe=safe,
         )
-        print kwargs
+        print(kwargs)
         collection.update(update.query.query, update.update_data, **kwargs)
 
     def execute_find_and_modify(self, fm_exp):

@@ -69,7 +69,7 @@ class UpdateExpression(object):
             return self._atomic_op('$set', qfield, value)
         elif len(kwargs) != 0:
             ret = self
-            for key, value in kwargs.iteritems():
+            for key, value in kwargs.items():
                 ret = ret._atomic_op('$set', key, value)
             return ret
         else:
@@ -90,7 +90,7 @@ class UpdateExpression(object):
         elif len(args) == 2:
             pairs.append(args)
         elif len(kwargs) != 0:
-            pairs.extend([(k, v) for k, v in kwargs.iteritems()])
+            pairs.extend([(k, v) for k, v in kwargs.items()])
         else:
             raise UpdateException('Invalid arguments for set.  Requires either two positional arguments or at least one keyword argument')
 

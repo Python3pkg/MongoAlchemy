@@ -30,7 +30,7 @@ def test_indexes():
     got = s.get_indexes(TestDoc)
     for idx, d in expected:
         assert idx in got
-        for k, v in d.iteritems():
+        for k, v in d.items():
             assert got[idx][k] == d[k]
 
 @known_failure

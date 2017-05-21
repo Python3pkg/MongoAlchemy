@@ -59,7 +59,7 @@ class Query(object):
         return self.__get_query_result()
 
     def resolve_name(self, name):
-        if not isinstance(name, basestring) or name[0] == '$':
+        if not isinstance(name, str) or name[0] == '$':
             return name
         ret = self.type
         for part in name.split('.'):
@@ -206,7 +206,7 @@ class Query(object):
     def filter_by(self, **filters):
         ''' Filter for the names in ``filters`` being equal to the associated
             values.  Cannot be used for sub-objects since keys must be strings'''
-        for name, value in filters.iteritems():
+        for name, value in filters.items():
             self.filter(self.resolve_name(name) == value)
         return self
 
@@ -253,7 +253,7 @@ class Query(object):
 
     def _apply_dict(self, qe_dict):
         ''' Apply a query expression, updating the query object '''
-        for k, v in qe_dict.iteritems():
+        for k, v in qe_dict.items():
             k = self.resolve_name(k)
             if not k in self.__query:
                 self.__query[k] = v
@@ -409,8 +409,8 @@ class QueryResult(object):
                     .unwrap(value[field.db_field]) \
                     for field in self.field_order)
 
-    def next(self):
-        value = self.cursor.next()
+    def __next__(self):
+        value = next(self.cursor)
         if not self.raw_output:
             if self.values_only:
                 value = self._as_tuple(value)
